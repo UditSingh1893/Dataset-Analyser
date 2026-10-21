@@ -8,6 +8,7 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL! || "http://localhost:80
 
 export default function Home() {
   const [files, setFiles] = useState<string[]>([]);
+  const [target, setTarget] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -19,21 +20,24 @@ export default function Home() {
 
     const formData = new FormData();
     formData.append("file", file);
+    if (target) {
+      formData.append("target", target);
+    }
 
     try {
       setError("");
       setLoading(true);
 
-      const res = await axios.post(
-        `${BACKEND_URL}/process`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const res = await axios.post(`${BACKEND_URL}/process`, formData);
 
       setFiles(res.data.files);
     } catch (err: unknown) {
       console.error(err);
-      setError("Failed to process CSV. Check backend.");
+      const detail =
+        axios.isAxiosError(err) && err.response?.data?.detail
+          ? err.response.data.detail
+          : null;
+      setError(detail || "Failed to process CSV. Check backend.");
     } finally {
       setLoading(false);
     }
@@ -68,6 +72,27 @@ export default function Home() {
             </div>
             <input type="file" accept=".csv" onChange={handleUpload} className="hidden" />
           </label>
+
+          <div className="mt-6 pt-6 border-t border-slate-200">
+            <label
+              htmlFor="target"
+              className="block text-sm font-medium text-slate-700 mb-2"
+            >
+              Target column (optional)
+            </label>
+            <input
+              id="target"
+              type="text"
+              value={target}
+              onChange={(e) => setTarget(e.target.value)}
+              placeholder="e.g. label - leave blank to auto-detect"
+              className="w-full px-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <p className="mt-2 text-sm text-slate-500">
+              The class label you want to balance. If left blank, the backend
+              detects it from the column names.
+            </p>
+          </div>
         </div>
 
         {loading && (
@@ -94,7 +119,6 @@ export default function Home() {
                 const fullUrl = `${BACKEND_URL}${url}`
                 const fileName = url.split("/").pop() || `file-${i}`
                 const isImage = /\.(png|jpg|jpeg|gif|svg)$/i.test(fileName)
-                const isLocal = fullUrl.includes("localhost") || fullUrl.includes("127.0.0.1")
 
                 return (
                   <div
@@ -105,12 +129,12 @@ export default function Home() {
                     {isImage ? (
                       <div className="aspect-video bg-slate-100 relative">
                         <Image
-                          src={fullUrl || "/placeholder.svg"}
+                          src={fullUrl}
                           alt={fileName}
                           fill
                           className="object-contain"
                           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                          unoptimized={isLocal}
+                          unoptimized
                         />
                       </div>
                     ) : (

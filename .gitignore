@@ -12,12 +12,27 @@
 /coverage
 
 # Python
-/backend/utils/__pycache__
+__pycache__/
+*.py[cod]
 /backend/venv
+.ruff_cache/
 
 # Generated data
 /backend/uploads
 /backend/outputs
+
+# Large generated sample output. The resampled CreditCard.csv is ~304 MB,
+# which exceeds GitHub's 100 MB per-file push limit, so it is kept on disk
+# but not committed. Regenerate it by running the backend on
+# backend/uploads/CreditCard.csv.
+/public/smote_resampled.csv
+# The gzipped copy of the same file is ~98 MB, which is under the limit but
+# still large enough to bloat every clone. It is ignored as well so a
+# regenerated archive cannot accidentally be committed.
+/public/smote_resampled.csv.gz
+/public/weighted_*.csv
+/public/smote_train.csv
+/public/smote_test.csv
 
 # next.js
 /.next/

@@ -1,26 +1,10 @@
-Dataset Shape: (50000, 7)
+Dataset Shape: (284807, 31)
 
-Target Column: label
+Target Column: Class
 
 
 Class Distribution:
-label
-0    49411
-1      589
+Class
+0    284315
+1       492
 Name: count, dtype: int64
-
-
-Bias Analysis for gender:
-label       0    1
-gender            
-female  23754  271
-male    23620  297
-other    2037   21
-
-
-Bias Analysis for race:
-label       0    1
-race              
-groupA  16540  195
-groupB  16469  211
-groupC  16402  183

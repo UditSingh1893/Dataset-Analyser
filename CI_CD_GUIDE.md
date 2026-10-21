@@ -10,7 +10,7 @@ Three workflow files were created under `.github/workflows/`.
 flowchart LR
     PR[Pull Request opened] --> PRC[pr-check.yml\nValidate title + smoke test]
     PR --> CI[ci.yml\nLint + Build check]
-    MERGE[Merge to main] --> CD[cd.yml\nWait for CI -> Trigger Render Deploy Hooks]
+    MERGE[Merge to main] --> CD[cd.yml\nVerify -> Build + Push -> Trigger Render Deploy Hooks]
 ```
 
 ---
@@ -29,11 +29,14 @@ flowchart LR
 ---
 
 ### 2. `cd.yml` — Continuous Deployment (Render)
-**Triggers:** Runs automatically **only if** `ci.yml` passes successfully on the `main` branch.
+**Triggers:** Every push to `main`, or manually via `workflow_dispatch`.
 
 | Job | What it does |
 |-----|-------------|
-| **deploy** | Pings the **Render Deploy Hooks** using `curl` to tell Render to fetch the new code and build/deploy it. This guarantees Render only deploys code that has already passed GitHub Actions tests! |
+| **verify** | Runs the same lint and build checks as `ci.yml`. Both build jobs depend on it, so a failing check stops the deployment before any image is pushed. |
+| **build-push-frontend** / **build-push-backend** | Builds each image and pushes it to Docker Hub, tagged with the commit SHA and `latest`. |
+| **summary** | Writes the pushed image tags to the job summary. |
+| **deploy-to-render** | Pings the **Render Deploy Hooks** using `curl` to tell Render to fetch the new code and build/deploy it. This guarantees Render only deploys code that has already passed the GitHub Actions checks! |
 
 ---
 
@@ -76,6 +79,6 @@ Add these secrets exactly:
 
 ### Step 4 — Verify
 Push a new commit to `main`.
-1. GitHub Actions will start the `Continuous Integration` workflow.
-2. Once that goes green ✅, it will automatically start the `CD — Deploy to Render` workflow.
-3. The CD workflow will hit your Webhooks, and you will see your services spinning up in the Render Dashboard!
+1. GitHub Actions will start the `CD — Build & Push Docker Images` workflow.
+2. Its `verify` job runs the lint and build checks. If they fail, nothing is pushed and Render is never notified.
+3. Once they pass, both images are pushed to Docker Hub and the CD workflow hits your Webhooks — you will see your services spinning up in the Render Dashboard!

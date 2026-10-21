@@ -1,20 +1,26 @@
-import seaborn as sns
-import matplotlib.pyplot as plt
+import logging
 
-def run_bias_analysis(df, target, out_dir):
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+from utils.plotting import save_and_close
+
+logger = logging.getLogger(__name__)
+
+
+def run_bias_analysis(df: pd.DataFrame, target: str, out_dir: str) -> list[str]:
     # CLASS DISTRIBUTION
-    class_plot = df[target].value_counts()
-    class_plot.plot(kind="bar")
-    plt.title(f"Class Distribution for {target}")
-    plt.savefig(f"{out_dir}/class_distribution.png")
-    plt.clf()
+    fig, ax = plt.subplots()
+    df[target].value_counts().plot(kind="bar", ax=ax)
+    ax.set_title(f"Class Distribution for {target}")
+    save_and_close(fig, f"{out_dir}/class_distribution.png")
 
     # CORRELATION MATRIX
     numeric_df = df.select_dtypes(include="number")
     if numeric_df.shape[1] > 1:
         corr = numeric_df.corr()
         fig_size = max(12, numeric_df.shape[1] * 0.5)
-        plt.figure(figsize=(fig_size, fig_size))
+        fig, ax = plt.subplots(figsize=(fig_size, fig_size))
         sns.heatmap(
             corr,
             annot=numeric_df.shape[1] <= 15,  # only annotate if small enough
@@ -22,12 +28,11 @@ def run_bias_analysis(df, target, out_dir):
             cmap="coolwarm",
             vmin=-1, vmax=1,
             linewidths=0.3,
-            square=True
+            square=True,
+            ax=ax,
         )
-        plt.title("Correlation Matrix")
-        plt.tight_layout()
-        plt.savefig(f"{out_dir}/correlation_matrix.png", dpi=150)
-        plt.clf()
+        ax.set_title("Correlation Matrix")
+        save_and_close(fig, f"{out_dir}/correlation_matrix.png", dpi=150)
 
     # DETECT SENSITIVE FEATURES
     cat_cols = df.select_dtypes(include=["object", "category"]).columns.tolist()
@@ -43,13 +48,13 @@ def run_bias_analysis(df, target, out_dir):
         group_counts = df.groupby([col, target]).size().unstack(fill_value=0)
         report.append(f"\nBias Analysis for {col}:\n{group_counts}")
 
-        group_counts.plot(kind="bar")
-        plt.title(f"{col} vs {target}")
-        plt.savefig(f"{out_dir}/sensitive_{col}_bias.png")
-        plt.clf()
+        fig, ax = plt.subplots()
+        group_counts.plot(kind="bar", ax=ax)
+        ax.set_title(f"{col} vs {target}")
+        save_and_close(fig, f"{out_dir}/sensitive_{col}_bias.png")
 
     with open(f"{out_dir}/bias_report.txt", "w") as f:
         f.write("\n\n".join(report))
 
-    print(f"\nBias analysis completed. Sensitive columns detected: {sensitive_cols}")
+    logger.info("Bias analysis completed. Sensitive columns detected: %s", sensitive_cols)
     return sensitive_cols

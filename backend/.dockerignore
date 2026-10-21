@@ -5,3 +5,4 @@ venv/
 .venv/
 uploads/
 outputs/
+.ruff_cache/

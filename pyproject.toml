@@ -1,0 +1,18 @@
+[tool.ruff]
+target-version = "py310"
+
+[tool.ruff.lint]
+# Pinned explicitly rather than relying on ruff's defaults, because CI
+# installs ruff unpinned and a future default change would silently alter
+# what the pipeline checks.
+select = ["E4", "E7", "E9", "F", "I"]
+
+[tool.ruff.lint.isort]
+# The backend imports its own modules as `utils.<module>`. Left to
+# auto-detection, ruff classifies `utils` as first-party when run from
+# `backend/` and as third-party when run from the repository root, which
+# flips the expected import order depending on the working directory.
+# Pinning it as third-party matches the import order in the source files and
+# keeps the result identical from either directory.
+known-first-party = []
+known-third-party = ["utils"]

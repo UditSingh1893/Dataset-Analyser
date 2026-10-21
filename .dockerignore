@@ -1,6 +1,7 @@
 node_modules/
 .next/
 .git/
+.ruff_cache/
 .env*.local
 backend/
 docker-compose.yml
