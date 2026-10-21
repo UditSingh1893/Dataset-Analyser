@@ -5,6 +5,7 @@ import pandas as pd
 from imblearn.over_sampling import SMOTE, SMOTENC
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import StandardScaler
+
 from utils.plotting import plot_bar
 
 logger = logging.getLogger(__name__)

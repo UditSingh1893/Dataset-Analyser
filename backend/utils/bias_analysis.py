@@ -3,6 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
+
 from utils.plotting import save_and_close
 
 logger = logging.getLogger(__name__)
