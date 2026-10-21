@@ -152,7 +152,7 @@ Before running the project locally without Docker, ensure the following are inst
 - pip
 ### 2. Clone the repository
 ```bash
-git clone https://github.com/ookieCoder/Dataset-Analyser.git
+git clone https://github.com/UditSingh1893/Dataset-Analyser.git
 cd Dataset-Analyser
 ```
 ### 3. Backend Setup
