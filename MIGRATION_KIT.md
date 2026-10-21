@@ -1,62 +1,155 @@
-# Migration Kit — Dataset Analyser
+# Migration Kit — Dataset Analyser → fresh repo (clean Contributor widget)
 
-Do **this** in order. A numbered checklist:
+**Why:** GitHub's Contributor widget on the current repo still lists `claude` even though every commit on `main` is trailer-free. The widget reads a contributor index that includes orphaned commit objects GitHub still retains; the graph API and REST API don't. A **fresh repo** has no orphans, so the widget is guaranteed clean from the first minute.
 
-1. Work locally (branch + commit); push with `--force` in step 4 only
-2. Create a **new** repo under your account: `UditSingh1893/Dataset-Analyser-v2` (or any name)
-3. Replace every reference to the old clone URL in `README.md`, `CI_CD_GUIDE.md`, and `docker-compose.yml` if present
-4. Force-push the new remote `main`: `git push --force origin main`
-5. Wait 2 minutes, then check the Contributor widget at the new URL
-6. Add the 5 GitHub Actions secrets (see step-by-step below)
-7. Push another commit to trigger CI/CD: `git push origin main`
-8. Verify Docker Hub tags appear and Render deploy hook fires automatically
-9. Confirm live services still serve
-10. Read the verification guide before deleting the old repo
-
-A short version of everything, in order, for quick copying:
+**What is NOT affected:** your render.com services. Verified chain — Render never reads from GitHub:
 
 ```
-git branch migration
-git checkout migration
-git add -A && git commit -m "migration prep"
-git push origin migration
-# create new repo UditSingh1893/Dataset-Analyser-v2
-# add _scratch/, .gitignore entries, README clone URL, secrets (see below)
+git push → GitHub Actions cd.yml → verify → build & push images to Docker Hub
+        → curl Render Deploy Hooks → Render pulls image from Docker Hub → redeploy
+```
+
+Render source: **Docker Hub only** (`uditsingh1893/dataset-analyser-frontend` / `-backend`). Auto-Deploy is off; Render is only ever triggered by the deploy-hook curl.
+
+---
+
+## Part A — You do these (browser, ~10 min)
+
+### Step 1 · Create the new repo
+
+GitHub → **New repository** →
+- Owner: `UditSingh1893`
+- Name: `Dataset-Analyser-v2` *(any name works; must be NEW, not a rename)*
+- Visibility: **Public** (matches current repo)
+- ❌ Do NOT tick "Add a README" / "Add .gitignore" / "Choose a license" — the history must come from your local repo
+- Click **Create repository**
+
+### Step 2 · Copy the 5 secrets to the new repo
+
+New repo → **Settings** → **Secrets and variables** → **Actions** → **New repository secret** (×5)
+
+| # | Secret name | Value |
+|---|---|---|
+| 1 | `DOCKER_HUB_USERNAME` | `uditsingh1893` |
+| 2 | `DOCKER_HUB_TOKEN` | your Docker Hub access token (publish + read:write) |
+| 3 | `NEXT_PUBLIC_BACKEND_URL` | `https://dataset-analyser.onrender.com` |
+| 4 | `RENDER_DEPLOY_HOOK_BACKEND` | Render → *Backend service* → Settings → **Deploy Hook** → copy URL |
+| 5 | `RENDER_DEPLOY_HOOK_FRONTEND` | Render → *Frontend service* → Settings → **Deploy Hook** → copy URL |
+
+> To read secret #2: Docker Hub → your avatar → **Account Settings** → **Personal Access Tokens** → *Generate new token* → scopes `read`, `write`, `delete` → copy the token string. Docker Hub only shows it once.
+
+### Step 3 · Confirm Render auto-deploy is OFF
+
+Render dashboard → both services → **Settings** → **Auto-Deploy** = **No**.
+
+(If it were on, Render would redeploy on every GitHub push and bypass the CI gate — your `CI_CD_GUIDE.md` already documents turning it off.)
+
+---
+
+## Part B — Run these (terminal, in order)
+
+Open a terminal in the repo folder.
+
+```bash
+cd "/c/Users/Udit Singh/OneDrive/Desktop/CV fixer/Dataset-Analyser"
+```
+
+### Step 4 · Point the remote at the new repo
+
+```bash
 git remote set-url origin https://github.com/UditSingh1893/Dataset-Analyser-v2.git
+git remote -v
+```
+
+> If you'd rather not repoint the old one: `git remote rename origin old-origin` then `git remote add origin <new-url>`. Either is fine.
+
+### Step 5 · Push the clean history
+
+```bash
 git push -f origin main
-# wait 2 min, open contributor widget, verify it says 1
-git push origin main         # triggers CI + CD, writes docker tags
-cd /c/Users/Udit Singh/OneDrive/Desktop/CV fixer/Dataset-Analyser-v2   # wait for sync
-# verify Docker Hub, Render hooks, live website
-# then: archive the old repo (settings -> Darchive), don't delete
+```
+
+> `-f` is required only if the new repo has a conflicting history. If it errors "rejected", it's because the new repo auto-created a commit — delete that repo and re-create it without a README.
+
+Expected output: `* [new branch] main -> main` or `main -> main (forced update)`
+
+### Step 6 · Wait 2 minutes, then check the widget
+
+Open `https://github.com/UditSingh1893/Dataset-Analyser-v2` and look at the **Contributors** widget. It must show **1** contributor: `Udit Singh`. It should not mention `claude`.
+
+### Step 7 · Trigger CI/CD
+
+```bash
+git push origin main
+```
+
+Watch **Actions** tab. Expect two green runs:
+- `CI — Lint & Build`
+- `CD — Build & Push Docker Images`
+
+The CD run does: verify → build+push both images to Docker Hub → ping both Render deploy hooks.
+
+### Step 8 · Verify the deployment
+
+```bash
+# 1. Docker Hub got new tags
+curl -sL "https://hub.docker.com/v2/repositories/uditsingh1893/dataset-analyser-frontend/tags/?page_size=5" | python -c "import json,sys; [print('  ',t['name'],t['last_updated']) for t in json.load(sys.stdin)['results']]"
+
+# 2. Frontend still live and still pointing at the backend
+curl -sL -o /dev/null -w "frontend: %{http_code}\n" https://dataset-bias-analyser.onrender.com
+curl -sL -o /dev/null -w "backend:  %{http_code}\n" https://dataset-analyser.onrender.com/openapi.json
+
+# 3. Contributor widget (should be 1)
+curl -sL -H "Accept: application/json" https://github.com/UditSingh1893/Dataset-Analyser-v2/_sidebar | python -c "import json,sys; c=json.load(sys.stdin)['contributors']; print('  count:',c['contributorCount'],[x['login'] for x in c['contributors']])"
+```
+
+Expected: `count: 1 ['UditSingh1893']`, `frontend: 200`, `backend: 200`
+
+---
+
+## Part C — Update references and retire the old repo
+
+### Step 9 · Update the clone URL in README
+
+Edit `README.md` line 155:
+
+```
+git clone https://github.com/UditSingh1893/Dataset-Analyser-v2.git
+```
+
+Also check `MIGRATION_KIT.md` itself and any other `Dataset-Analyser.git` mentions:
+
+```bash
+grep -rn "Dataset-Analyser.git" --include="*.md" .
+```
+
+Commit and push:
+
+```bash
+git add -A && git commit -m "docs: point clone URL at the new repository" && git push origin main
+```
+
+### Step 10 · Archive (don't delete) the old repo
+
+Old repo → **Settings** → **Archive this repository**.
+
+Archiving keeps the old URL alive (it 301-redirects) and keeps the repo readable, so anyone who cloned it before is unaffected. Deleting outright would break those clones and any Render config still pointing at it.
+
+---
+
+## Rollback
+
+If anything goes wrong, the old repo is untouched and still has the full history:
+
+```bash
+git remote set-url origin https://github.com/UditSingh1893/Dataset-Analyser.git
 ```
 
 ---
 
-## Secret checklist
+## Notes
 
-Add these 5 secrets to the new repo (Settings → Secrets → Actions):
-
-| Secret | Value | What it is |
-|---|---|---|
-| `DOCKER_HUB_USERNAME` | `uditsingh1893` | The lowercase Docker Hub username the images were pushed under |
-| `DOCKER_HUB_TOKEN` | *your Docker Hub access token* | PAT with publish + read:write |
-| `NEXT_PUBLIC_BACKEND_URL` | `https://dataset-analyser.onrender.com` | Backend service URL that's baked into the frontend build |
-| `RENDER_DEPLOY_HOOK_BACKEND` | *copy from Render Backend settings → Deploy Hook* | Webhook endpoint that triggers the backend redeploy |
-| `RENDER_DEPLOY_HOOK_FRONTEND` | *copy from Render Frontend settings → Deploy Hook* | Webhook endpoint that triggers the frontend redeploy |
-
-## Render dashboard checklist
-
-- Backend → **Auto-Deploy**: No
-- Frontend → **Auto-Deploy**: No
-- Copy both Deploy Hook URLs into step 5 above
-
-## Verification checklist
-
-After pushing the clean history (`git push origin main`):
-
-1. **Contributor widget** — open the new repo URL and confirm the Contributors widget shows only `Udit Singh` (1 contributor)
-2. **Docker Hub** — confirm tags `latest` and `sha-<new>` show on `uditsingh1893/dataset-analyser-{frontend,backend}`
-3. **Render hooks** — open the Actions page, confirm `CD — Build & Push Docker Images` runs green; the deploy-hook curl fires automatically after
-4. **Live site** — confirm `https://dataset-bias-analyser.onrender.com` serves and calls `https://dataset-analyser.onrender.com/openapi.json`
-5. **Old repo** — archive it in Settings (don't delete) so the redirect stays intact
+- The current `main` is **15 commits**, all authored by `Udit Singh <uditsingh1893@gmail.com>`, **zero** `Co-Authored-By` trailers. Nothing needs rewriting — the fresh repo just inherits it.
+- The Docker Hub namespace is `uditsingh1893` (lowercase — Docker rejects uppercase). `UditSingh1893` is the *GitHub* name.
+- The frontend service host is `dataset-bias-analyser.onrender.com`; the backend is the separate `dataset-analyser.onrender.com`. They are two different services, not a typo.
+- The old repo's widget may still show `claude` for a while (until GitHub re-indexes the orphans). That's cosmetic and independent of the new repo.
