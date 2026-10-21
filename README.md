@@ -18,23 +18,24 @@ A full-stack web application that:
 
 ## Live Demo
 
-- **Web App:**  
-   https://dataset-bias-analyser.onrender.com
+- **Web App:**
+  https://dataset-bias-analyser.onrender.com
+- **API:** https://dataset-analyser.onrender.com
 
 - **Sample Dataset:**
-   [dataset.csv](public/dataset.csv) (the synthetic `age/income/gender/race` demo set)
+  [dataset.csv](public/dataset.csv) (the synthetic `age/income/gender/race` demo set, 50,000 rows)
 
 - **Sample Output** (from the CreditCard fraud dataset, 284,807 rows):
 
-   [bias_report.txt](public/bias_report.txt)
+  [bias_report.txt](public/bias_report.txt)
 
-   ![Class Distribution](public/class_distribution.png)
-   ![Correlation Matrix](public/correlation_matrix.png)
-   ![Smote Before](public/smote_before.png)
-   ![Smote After](public/smote_after.png)
+  ![Class Distribution](public/class_distribution.png)
+  ![Correlation Matrix](public/correlation_matrix.png)
+  ![Smote Before](public/smote_before.png)
+  ![Smote After](public/smote_after.png)
 
 > **Note on the large sample output:** the balanced CreditCard dataset is
-> 568,630 rows, which is ~304 MB as a plain CSV. That exceeds GitHub's 100 MB
+> 568,630 rows, which is ~300 MB as a plain CSV. That exceeds GitHub's 100 MB
 > per-file push limit, so `smote_resampled.csv` is gitignored and is not
 > committed. The charts and `bias_report.txt` above were generated from that
 > run. To regenerate the CSV, run the backend on

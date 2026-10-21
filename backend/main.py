@@ -32,10 +32,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Absolute paths, so the output location does not depend on the server's
-# working directory.
-UPLOAD_DIR = os.path.abspath("uploads")
-OUTPUT_DIR = os.path.abspath("outputs")
+# Anchored to this file's directory, so the locations do not depend on the
+# server's working directory.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
+OUTPUT_DIR = os.path.join(BASE_DIR, "outputs")
 
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 os.makedirs(OUTPUT_DIR, exist_ok=True)
