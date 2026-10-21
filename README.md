@@ -35,11 +35,14 @@ A full-stack web application that:
   ![Smote After](public/smote_after.png)
 
 > **Note on the large sample output:** the balanced CreditCard dataset is
-> 568,630 rows, which is ~300 MB as a plain CSV. That exceeds GitHub's 100 MB
+> 568,630 rows, which is ~290 MB as a plain CSV. That exceeds GitHub's 100 MB
 > per-file push limit, so `smote_resampled.csv` is gitignored and is not
 > committed. The charts and `bias_report.txt` above were generated from that
-> run. To regenerate the CSV, run the backend on
-> `backend/uploads/CreditCard.csv` and download it from the results list.
+> run. `backend/uploads/` is gitignored too, so `CreditCard.csv` is not in the
+> repository — drop it there yourself to reproduce the run. With the committed
+> `public/dataset.csv` you can reproduce the pipeline on the smaller 50,000-row
+> demo set instead.
+
 ---
 
 ## Tech Stack
@@ -100,8 +103,8 @@ warning.
 
 ### Worked example: CreditCard fraud dataset
 
-Running the backend on `backend/uploads/CreditCard.csv` (284,807 rows, 30
-numeric features, target `Class`):
+Running the backend on a local `backend/uploads/CreditCard.csv` (284,807 rows,
+30 numeric features, target `Class`):
 
 | | Class 0 | Class 1 | Total rows |
 |---|---|---|---|
@@ -110,7 +113,7 @@ numeric features, target `Class`):
 
 All 284,807 original rows are retained and 283,823 synthetic rows are added.
 Because the dataset is entirely numeric, plain `SMOTE` is used. The run takes
-about 48 seconds end to end, and the resulting CSV is ~318 MB.
+about 48 seconds end to end, and the resulting CSV is ~290 MB.
 
 The `bias_report.txt` and the four charts in `public/` come from this run.
 
@@ -119,8 +122,13 @@ The `bias_report.txt` and the four charts in `public/` come from this run.
 ## Deployment
 
 - Frontend and backend are deployed as **separate Render Web Services**
-- Both services are sourced from the **same GitHub repository**
-- Backend URL is injected into frontend using environment variables
+- Both are built as Docker images and published to Docker Hub by the
+  `CD — Build & Push Docker Images` workflow, which runs only after the
+  `verify` job has passed
+- The workflow then pings each service's Render deploy hook, so Render
+  redeploys the image that already passed CI
+- The backend URL is injected into the frontend image at build time via
+  `NEXT_PUBLIC_BACKEND_URL`
 
 ---
 
@@ -151,6 +159,7 @@ Before running the project locally without Docker, ensure the following are inst
 - Python 3.10+
 - npm or yarn
 - pip
+
 ### 2. Clone the repository
 ```bash
 git clone https://github.com/UditSingh1893/Dataset-Analyser.git
@@ -158,7 +167,7 @@ cd Dataset-Analyser
 ```
 ### 3. Backend Setup
 
-Create a Python Virtual Environment
+From the `backend/` directory, create and activate a Python virtual environment:
 ```bash
 cd backend
 python -m venv venv
@@ -174,15 +183,20 @@ venv\Scripts\Activate
 ```
 
 ### 4. Install Dependencies
+
+Backend dependencies (still inside `backend/`):
 ```bash
 pip install -r requirements.txt
 ```
+
+Frontend dependencies (from the repository root):
 ```bash
+cd ..
 npm install
 ```
 
 ### 5. Running the Application Locally
-**Start the Backend**
+**Start the Backend** (from `backend/`, with the virtual environment active)
 ```bash
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
@@ -207,8 +221,8 @@ Frontend will run at http://localhost:3000
 
 ```bash
 curl -X POST http://localhost:8000/process \
-  -F "file=@backend/uploads/CreditCard.csv" \
-  -F "target=Class"
+  -F "file=@public/dataset.csv" \
+  -F "target=label"
 ```
 
 The response lists every generated file with a `/download/{folder}/{file}` URL.

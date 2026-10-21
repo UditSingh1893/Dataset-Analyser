@@ -71,9 +71,9 @@ Add these secrets exactly:
 
 | Secret Name | Value |
 |---|---|
-| `DOCKER_HUB_USERNAME` | Your Docker Hub username (e.g. `ookiecoder`) |
+| `DOCKER_HUB_USERNAME` | Your Docker Hub username (e.g. `uditsingh1893`) |
 | `DOCKER_HUB_TOKEN` | A Personal Access Token from Docker Hub |
-| `NEXT_PUBLIC_BACKEND_URL` | The production URL of your backend (e.g. `https://dataset-analyser-backend.onrender.com`) |
+| `NEXT_PUBLIC_BACKEND_URL` | The production URL of your backend (e.g. `https://dataset-analyser.onrender.com`) |
 | `RENDER_DEPLOY_HOOK_BACKEND` | The Backend Deploy Hook URL you copied (e.g. `https://api.render.com/deploy/srv-...`) |
 | `RENDER_DEPLOY_HOOK_FRONTEND` | The Frontend Deploy Hook URL you copied (e.g. `https://api.render.com/deploy/srv-...`) |
 

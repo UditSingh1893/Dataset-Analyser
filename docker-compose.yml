@@ -16,10 +16,11 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        # NEXT_PUBLIC_* variables are inlined into the bundle at build time,
+        # so this has to be a build arg. Setting it as a runtime environment
+        # variable would have no effect on the compiled output.
         - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
     ports:
       - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_BACKEND_URL=http://localhost:8000
     depends_on:
       - backend

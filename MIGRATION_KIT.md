@@ -111,7 +111,7 @@ Expected: `count: 1 ['UditSingh1893']`, `frontend: 200`, `backend: 200`
 
 ### Step 9 · Update the clone URL in README
 
-Edit `README.md` line 155:
+Edit the clone URL in `README.md`:
 
 ```
 git clone https://github.com/UditSingh1893/Dataset-Analyser-v2.git
@@ -149,7 +149,7 @@ git remote set-url origin https://github.com/UditSingh1893/Dataset-Analyser.git
 
 ## Notes
 
-- The current `main` is **15 commits**, all authored by `Udit Singh <uditsingh1893@gmail.com>`, **zero** `Co-Authored-By` trailers. Nothing needs rewriting — the fresh repo just inherits it.
+- The current `main` is **18 commits**, all authored by `Udit Singh <uditsingh1893@gmail.com>`, **zero** `Co-Authored-By` trailers. Nothing needs rewriting — the fresh repo just inherits it.
 - The Docker Hub namespace is `uditsingh1893` (lowercase — Docker rejects uppercase). `UditSingh1893` is the *GitHub* name.
 - The frontend service host is `dataset-bias-analyser.onrender.com`; the backend is the separate `dataset-analyser.onrender.com`. They are two different services, not a typo.
 - The old repo's widget may still show `claude` for a while (until GitHub re-indexes the orphans). That's cosmetic and independent of the new repo.

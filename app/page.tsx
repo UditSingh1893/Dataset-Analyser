@@ -48,7 +48,10 @@ export default function Home() {
       <div className="max-w-5xl mx-auto px-6 py-12">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-3">CSV Bias & SMOTE Analyzer</h1>
-          <p className="text-slate-600">Upload your CSV file to analyze bias and apply SMOTE techniques</p>
+          <p className="text-slate-600">
+            Upload your CSV to inspect class and subgroup distributions, then
+            balance the classes with SMOTE
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-8 mb-8">
@@ -68,7 +71,7 @@ export default function Home() {
                 />
               </svg>
               <p className="text-lg font-medium text-slate-700 mb-1">Click to upload CSV file</p>
-              <p className="text-sm text-slate-500">or drag and drop</p>
+              <p className="text-sm text-slate-500">CSV files only</p>
             </div>
             <input type="file" accept=".csv" onChange={handleUpload} className="hidden" />
           </label>
